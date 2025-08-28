@@ -37,9 +37,10 @@ export function ConnectWalletButton() {
       }
       dispatch(connectWalletAction(userAddress));
       dispatch(setUserDefiQ({ address: userAddress, score: defiQScore }));
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error('Wallet connection error:', error);
-      setError('Connection rejected or an error occurred.');
+      // User rejected request or other error
+      setError('Connection was cancelled. You can try again.');
     }
   };
 
@@ -78,9 +79,10 @@ export function ConnectWalletButton() {
             <DisconnectButton onClick={disconnectWallet} title="Disconnect from app (to fully disconnect, use your wallet UI)">Disconnect</DisconnectButton>
           </ConnectedBox>
         ) : (
-          <CustomButton onClick={connectWallet}>
-            Connect Wallet
-          </CustomButton>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <CustomButton onClick={connectWallet}>Connect Wallet</CustomButton>
+            {error && <RetryLink onClick={connectWallet}>Try again</RetryLink>}
+          </div>
         )}
       </ModernConnectButtonWrapper>
       {error && <ErrorBox>{error}</ErrorBox>}
@@ -167,4 +169,13 @@ const ErrorBox = styled.div`
   font-size: 0.95rem;
   margin-top: 8px;
   text-align: center;
+`;
+
+const RetryLink = styled.button`
+  background: transparent;
+  border: 1px dashed ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.primary};
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
 `;

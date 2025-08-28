@@ -56,9 +56,11 @@ class SolidityClient {
       const logs = await this.provider.getLogs({ ...filter, fromBlock: 0n, toBlock: 'latest' });
       for (const log of logs) {
         try {
-          const parsed = iface.parseLog({ topics: log.topics, data: log.data });
-          const marketId: bigint = parsed.args[0];
-          map[Number(marketId)] = log.transactionHash;
+          const parsed = iface.parseLog({ topics: log.topics, data: log.data }) as any;
+          const marketId: bigint | undefined = parsed?.args?.[0];
+          if (marketId !== undefined) {
+            map[Number(marketId)] = log.transactionHash;
+          }
         } catch {}
       }
     } catch (e) {
@@ -90,7 +92,7 @@ class SolidityClient {
     for (let i = 1; i <= Number(count); i++) {
       try {
         const m = await this.contract.getMarket(i);
-        let txHash = txMap[Number(m.id)] || txFallbackMap[Number(m.id)];
+        let txHash: string | undefined = txMap[Number(m.id)] || txFallbackMap[Number(m.id)];
         if (!txHash) {
           txHash = await this.fetchTxForMarket(Number(m.id));
         }
