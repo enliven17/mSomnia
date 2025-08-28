@@ -11,6 +11,7 @@ export default function HomePage() {
   const [filter, setFilter] = useState<"open" | "closed" | "all">("open");
   const dispatch = useDispatch();
   const markets = useSelector((state: RootState) => state.markets.markets);
+  const isLoading = useSelector((state: RootState) => state.markets.isLoading);
 
   useEffect(() => {
     // Uygulama yüklenince zincirden marketleri senkronize et
@@ -103,7 +104,13 @@ export default function HomePage() {
         </FilterBar>
       </FilterSection>
 
-      {filteredMarkets.length === 0 ? (
+      {isLoading ? (
+        <EmptyState>
+          <EmptyIcon>⛓️</EmptyIcon>
+          <EmptyTitle>Getting market data from chain...</EmptyTitle>
+          <EmptyText>Please wait a moment while we sync Somnia markets.</EmptyText>
+        </EmptyState>
+      ) : filteredMarkets.length === 0 ? (
         <EmptyState>
           <EmptyIcon>🔮</EmptyIcon>
           <EmptyTitle>No markets found</EmptyTitle>

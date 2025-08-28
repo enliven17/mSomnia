@@ -19,6 +19,7 @@ interface MarketsState {
   markets: Market[];
   claimableRewards: ClaimableReward[];
   userDefiQ: Record<string, number>; // address -> DEFiq puanı
+  isLoading: boolean;
 }
 
 // localStorage'dan markets yükle
@@ -56,6 +57,7 @@ const initialState: MarketsState = {
     "user7": 110,
     "user8": 45,
   },
+  isLoading: false,
 };
 
 const marketsSlice = createSlice({
@@ -112,6 +114,20 @@ const marketsSlice = createSlice({
     setUserDefiQ(state, action: PayloadAction<{ address: string; score: number }>) {
       state.userDefiQ[action.payload.address] = action.payload.score;
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(syncOnChainMarkets.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(syncOnChainMarkets.fulfilled, (state, action: PayloadAction<Market[]>) => {
+        state.isLoading = false;
+        state.markets = action.payload;
+        saveMarketsToStorage(state.markets);
+      })
+      .addCase(syncOnChainMarkets.rejected, (state) => {
+        state.isLoading = false;
+      });
   }
 });
 
@@ -150,7 +166,7 @@ export const syncOnChainMarkets = createAsyncThunk(
         });
       }
     } catch {}
-    dispatch(marketsSlice.actions.setMarkets(mapped));
+    return mapped;
   }
 );
 
@@ -168,11 +184,11 @@ export const closeMarketAndDistributeRewards = createAsyncThunk(
     const winners = market.bets.filter(b => b.side === result);
     const totalWinnerBet = winners.reduce((sum, b) => sum + b.amount, 0);
     if (totalWinnerBet > 0) {
-              winners.forEach(bet => {
-          const pay = (bet.amount / totalWinnerBet) * totalPool;
-          // Note: Rewards are now handled by smart contract
-          console.log(`Reward calculated for ${bet.userId}: ${pay} ETH`);
-        });
+      winners.forEach(bet => {
+        const pay = (bet.amount / totalWinnerBet) * totalPool;
+        // Note: Rewards are now handled by smart contract
+        console.log(`Reward calculated for ${bet.userId}: ${pay} ETH`);
+      });
     }
   }
 );
