@@ -11,7 +11,7 @@ async function main() {
 
   const markets = [
     {
-      title: "Will Elon Musk tweet 'Doge to the moon' again in 2024? 🚀",
+      title: "Will Elon Musk tweet 'Doge to the moon' again in 2026? 🚀",
       description: "The most predictable prediction in crypto history - will the Doge father strike again?",
       closingTime: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days from now
       minBet: hre.ethers.parseEther("0.01"),
@@ -25,7 +25,7 @@ async function main() {
       maxBet: hre.ethers.parseEther("0.5")
     },
     {
-      title: "Will 'HODL' be added to the Oxford Dictionary in 2024? 📚",
+      title: "Will 'HODL' be added to the Oxford Dictionary in 2026? 📚",
       description: "The ultimate validation for crypto culture - will HODL become official English?",
       closingTime: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days from now
       minBet: hre.ethers.parseEther("0.005"),
@@ -39,7 +39,7 @@ async function main() {
       maxBet: hre.ethers.parseEther("0.2")
     },
     {
-      title: "Will a cat become the CEO of a DAO in 2024? 😸",
+      title: "Will a cat become the CEO of a DAO in 2026? 😸",
       description: "Dogs have their day, but cats are taking over the decentralized world",
       closingTime: Math.floor(Date.now() / 1000) + (180 * 24 * 60 * 60), // 180 days from now
       minBet: hre.ethers.parseEther("0.01"),
@@ -53,7 +53,7 @@ async function main() {
       maxBet: hre.ethers.parseEther("0.3")
     },
     {
-      title: "Will 'WAGMI' be used in a presidential speech in 2024? 🗣️",
+      title: "Will 'WAGMI' be used in a presidential speech in 2026? 🗣️",
       description: "We're All Gonna Make It - but will politicians finally understand crypto slang?",
       closingTime: Math.floor(Date.now() / 1000) + (60 * 24 * 60 * 60), // 60 days from now
       minBet: hre.ethers.parseEther("0.01"),
@@ -67,7 +67,7 @@ async function main() {
       maxBet: hre.ethers.parseEther("0.4")
     },
     {
-      title: "Will 'Diamond Hands' become a medical condition in 2024? 💎",
+      title: "Will 'Diamond Hands' become a medical condition in 2026? 💎",
       description: "Doctors finally recognize the psychological effects of never selling",
       closingTime: Math.floor(Date.now() / 1000) + (90 * 24 * 60 * 60), // 90 days from now
       minBet: hre.ethers.parseEther("0.005"),
