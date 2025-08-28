@@ -70,6 +70,8 @@ export function ConnectWalletButton() {
     setError(null);
   };
 
+  const closeModal = () => setError(null);
+
   return (
     <>
       <ModernConnectButtonWrapper>
@@ -81,11 +83,22 @@ export function ConnectWalletButton() {
         ) : (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <CustomButton onClick={connectWallet}>Connect Wallet</CustomButton>
-            {error && <RetryLink onClick={connectWallet}>Try again</RetryLink>}
           </div>
         )}
       </ModernConnectButtonWrapper>
-      {error && <ErrorBox>{error}</ErrorBox>}
+
+      {error && (
+        <ModalOverlay role="dialog" aria-modal="true">
+          <ModalContent>
+            <ModalTitle>Wallet Connection</ModalTitle>
+            <ModalMessage>{error}</ModalMessage>
+            <ModalActions>
+              <SecondaryButton onClick={closeModal}>Close</SecondaryButton>
+              <PrimaryButton onClick={connectWallet}>Try Again</PrimaryButton>
+            </ModalActions>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </>
   );
 }
@@ -164,18 +177,61 @@ const DisconnectButton = styled.button`
   }
 `;
 
-const ErrorBox = styled.div`
-  color: ${({ theme }) => theme.colors.accentRed};
-  font-size: 0.95rem;
-  margin-top: 8px;
-  text-align: center;
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  z-index: 1000;
 `;
 
-const RetryLink = styled.button`
-  background: transparent;
-  border: 1px dashed ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.primary};
+const ModalContent = styled.div`
+  width: 100%;
+  max-width: 420px;
+  background: ${({ theme }) => theme.colors.card || '#111'};
+  color: ${({ theme }) => theme.colors.text || '#fff'};
+  border: 1px solid ${({ theme }) => theme.colors.border || 'rgba(255,255,255,0.1)'};
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  padding: 18px;
+`;
+
+const ModalTitle = styled.h3`
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+`;
+
+const ModalMessage = styled.p`
+  margin: 0 0 16px 0;
+  font-size: 0.98rem;
+  line-height: 1.4;
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+`;
+
+const PrimaryButton = styled.button`
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  border: none;
   border-radius: 10px;
-  padding: 6px 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+`;
+
+const SecondaryButton = styled.button`
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text || '#fff'};
+  border: 1px solid ${({ theme }) => theme.colors.border || 'rgba(255,255,255,0.25)'};
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
   cursor: pointer;
 `;
