@@ -212,3 +212,19 @@ Desktop.ini
 
 # Local development
 *.local
+
+# Foundry (forge) build artifacts
+out/
+broadcast/
+cache/
+
+# Hardhat/Foundry artifacts at repo root
+artifacts/
+typechain-types/
+ignition/
+
+# Keep only Solidity files in contracts/ if a subproject exists
+# (ignore nested JS/TS packages under contracts/)
+contracts/**
+!contracts/*.sol
+!contracts/README.md
