@@ -31,7 +31,7 @@ export function MainNav() {
     <NavBar>
       <FlexRow>
         <LogoBox>
-          <LogoImage src="/msomnialogo.png" alt="mSomnia" />
+          <LogoImage src="/newlogo.png" alt="mSomnia" />
           <span style={{ fontWeight: 700, fontSize: 22, letterSpacing: 1 }}>mSomnia</span>
         </LogoBox>
         <NavLinks>

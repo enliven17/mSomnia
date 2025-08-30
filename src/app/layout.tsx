@@ -20,13 +20,13 @@ export const metadata: Metadata = {
   description: "mSomnia: On-chain Prediction Markets",
   icons: {
     icon: [
-      { url: "/msomnialogo.png" },
-      { url: "/msomnialogo.png", type: "image/png", sizes: "32x32" },
-      { url: "/msomnialogo.png", type: "image/png", sizes: "192x192" },
+      { url: "/newlogo.png" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/newlogo.png", type: "image/png", sizes: "192x192" },
       { url: "/favicon.ico" },
     ],
-    shortcut: ["/msomnialogo.png", "/favicon.ico"],
-    apple: ["/msomnialogo.png"],
+    shortcut: ["/newlogo.png", "/favicon.ico"],
+    apple: ["/newlogo.png"],
   },
 };
 

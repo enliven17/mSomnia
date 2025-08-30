@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Market } from "@/types/market";
 // Link kaldırıldı; kart detay sayfasına yönlendirme yok
 import { useState } from "react";
-import { FaClock, FaCheckCircle, FaTimesCircle, FaCoins, FaUsers, FaCalendarAlt } from 'react-icons/fa';
+import { FaClock, FaCheckCircle, FaTimesCircle, FaCoins, FaUsers, FaCalendarAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
 import { useDispatch } from 'react-redux';
 import { addBet } from '@/store/marketsSlice';
@@ -49,16 +49,18 @@ export function MarketCard({ market }: Props) {
 
   const explorerTxUrl = market.txHash
     ? `https://shannon-explorer.somnia.network/tx/${market.txHash}`
-    : `https://shannon-explorer.somnia.network/address/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}`;
-  const shortTx = market.txHash ? `${market.txHash.slice(0, 6)}...${market.txHash.slice(-4)}` : 'contract';
+    : `https://shannon-explorer.somnia.network/address/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xc0b33Cc720025dD0AcF56e249C8b76A6A34170B6'}`;
+  const shortTx = market.txHash ? `${market.txHash.slice(0, 6)}...${market.txHash.slice(-4)}` : 'Contract';
 
   return (
     <Card onClick={handleCardClick}>
-      {market.txHash && (
-        <TxBadge onClick={(e) => e.stopPropagation()}>
-          <a href={explorerTxUrl} target="_blank" rel="noopener noreferrer">TX: {shortTx}</a>
-        </TxBadge>
-      )}
+      {/* Always show transaction badge - if no txHash, show contract link */}
+      <TxBadge onClick={(e) => e.stopPropagation()}>
+        <a href={explorerTxUrl} target="_blank" rel="noopener noreferrer">
+          <FaExternalLinkAlt style={{ marginRight: '4px', fontSize: '10px' }} />
+          {market.txHash ? `TX: ${shortTx}` : 'View Contract'}
+        </a>
+      </TxBadge>
       <CardHeader>
         <StatusBadge $status={getStatusColor()}>
           {getStatusIcon()}
@@ -162,20 +164,35 @@ const Card = styled.div`
 
 const TxBadge = styled.div`
   position: absolute;
-  top: 14px; /* biraz daha aşağıda */
+  top: 14px;
   left: 50%;
   transform: translateX(-50%);
   background: ${({ theme }) => theme.colors.primary};
   color: #fff;
   border-radius: 10px;
-  padding: 4px 10px;
-  font-size: 10px;
+  padding: 6px 12px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1;
-  z-index: 3;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  border: 1px solid ${({ theme }) => `${theme.colors.card}`};
-  a { color: #fff; text-decoration: none; }
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  border: 2px solid #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    background: ${({ theme }) => theme.colors.accentGreen || theme.colors.primary};
+  }
+  
+  a { 
+    color: #fff; 
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
 `;
 
 const CardHeader = styled.div`
