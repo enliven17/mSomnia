@@ -1,28 +1,139 @@
 import styled from "styled-components";
 import { Market } from "@/types/market";
 // Link kaldırıldı; kart detay sayfasına yönlendirme yok
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FaClock, FaCheckCircle, FaTimesCircle, FaCoins, FaUsers, FaCalendarAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
 import { useDispatch } from 'react-redux';
 import { addBet } from '@/store/marketsSlice';
 import { buyShares } from '@/api/solidityClient';
+import { BetSuccessModal } from './BetSuccessModal';
+import { Toast, ToastType } from './Toast';
 
 interface Props {
   market: Market;
   onClick?: () => void;
 }
 
-
-
 export function MarketCard({ market }: Props) {
   const { isConnected } = useWalletConnection();
   const [qty, setQty] = useState<number>(1);
   const [loading, setLoading] = useState<false | 'yes' | 'no'>(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [betDetails, setBetDetails] = useState<{
+    side: 'yes' | 'no';
+    amount: number;
+    marketTitle: string;
+    txHash: string;
+  } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+    isVisible: boolean;
+  }>({
+    message: '',
+    type: 'info',
+    isVisible: false
+  });
   const dispatch = useDispatch();
+
+  // MetaMask provider'ını önceden hazırla
+  useEffect(() => {
+    if (isConnected && typeof window !== 'undefined' && (window as any).ethereum) {
+      // Provider'ı önceden hazırla
+      console.log('🔧 Pre-warming MetaMask provider...');
+    }
+  }, [isConnected]);
 
   // Kart tıklamasında yönlendirme kaldırıldı
   const handleCardClick = (_e: React.MouseEvent) => {};
+
+  const showToast = (message: string, type: ToastType) => {
+    setToast({ message, type, isVisible: true });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
+
+  const handleBetSuccess = (side: 'yes' | 'no', txHash: string) => {
+    setBetDetails({
+      side,
+      amount: qty * 0.5,
+      marketTitle: market.title,
+      txHash
+    });
+    setShowSuccessModal(true);
+    showToast(`Bet placed successfully! ${side.toUpperCase()} ${qty * 0.5} STT`, 'success');
+  };
+
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false);
+    setBetDetails(null);
+  };
+
+  const handleBetError = (error: string) => {
+    let userFriendlyMessage = 'Bet failed';
+    
+    // Common error patterns and their user-friendly messages
+    if (error.includes('user rejected') || error.includes('User rejected') || error.includes('MetaMask Tx Signature: User denied')) {
+      userFriendlyMessage = 'Transaction cancelled by user';
+    } else if (error.includes('insufficient funds') || error.includes('Insufficient funds')) {
+      userFriendlyMessage = 'Insufficient STT balance';
+    } else if (error.includes('gas limit exceeded') || error.includes('Gas limit exceeded')) {
+      userFriendlyMessage = 'Gas limit exceeded - please try again';
+    } else if (error.includes('gas') || error.includes('Gas')) {
+      userFriendlyMessage = 'Gas limit exceeded';
+    } else if (error.includes('network') || error.includes('Network')) {
+      userFriendlyMessage = 'Network error - please try again';
+    } else if (error.includes('contract') || error.includes('Contract')) {
+      userFriendlyMessage = 'Contract error - please try again';
+    } else if (error.includes('timeout') || error.includes('Timeout')) {
+      userFriendlyMessage = 'Transaction timeout - please try again';
+    } else if (error.includes('nonce') || error.includes('Nonce')) {
+      userFriendlyMessage = 'Transaction nonce error - please try again';
+    } else if (error.includes('already known') || error.includes('Already known')) {
+      userFriendlyMessage = 'Transaction already submitted';
+    } else if (error.includes('replacement transaction underpriced')) {
+      userFriendlyMessage = 'Gas price too low - please try again';
+    } else if (error.includes('execution reverted')) {
+      userFriendlyMessage = 'Transaction failed - please try again';
+    } else if (error.includes('invalid signature')) {
+      userFriendlyMessage = 'Invalid signature - please try again';
+    } else if (error.includes('unauthorized')) {
+      userFriendlyMessage = 'Unauthorized action';
+    } else if (error.includes('market closed') || error.includes('Market closed')) {
+      userFriendlyMessage = 'Market is closed';
+    } else if (error.includes('invalid amount') || error.includes('Invalid amount')) {
+      userFriendlyMessage = 'Invalid bet amount';
+    } else if (error.includes('creator cannot bet')) {
+      userFriendlyMessage = 'Market creator cannot place bets';
+    } else if (error.includes('min bet') || error.includes('Min bet')) {
+      userFriendlyMessage = 'Bet amount below minimum';
+    } else if (error.includes('max bet') || error.includes('Max bet')) {
+      userFriendlyMessage = 'Bet amount above maximum';
+    } else if (error.includes('wallet') || error.includes('Wallet')) {
+      userFriendlyMessage = 'Wallet connection error';
+    } else if (error.includes('provider') || error.includes('Provider')) {
+      userFriendlyMessage = 'Provider error - please refresh';
+    } else if (error.includes('rpc') || error.includes('RPC')) {
+      userFriendlyMessage = 'Network connection error';
+    } else if (error.includes('blockchain') || error.includes('Blockchain')) {
+      userFriendlyMessage = 'Blockchain error - please try again';
+    } else if (error.includes('transaction') || error.includes('Transaction')) {
+      userFriendlyMessage = 'Transaction error - please try again';
+    } else if (error.includes('unknown') || error.includes('Unknown')) {
+      userFriendlyMessage = 'Unknown error - please try again';
+    } else if (error.length > 100) {
+      // If error is too long, show a generic message
+      userFriendlyMessage = 'Transaction failed - please try again';
+    } else {
+      // For other errors, show a shortened version
+      userFriendlyMessage = `Error: ${error.substring(0, 50)}${error.length > 50 ? '...' : ''}`;
+    }
+    
+    showToast(userFriendlyMessage, 'error');
+  };
 
   const getStatusIcon = () => {
     if (market.status === "resolved") {
@@ -51,6 +162,37 @@ export function MarketCard({ market }: Props) {
     ? `https://shannon-explorer.somnia.network/tx/${market.txHash}`
     : `https://shannon-explorer.somnia.network/address/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xc0b33Cc720025dD0AcF56e249C8b76A6A34170B6'}`;
   const shortTx = market.txHash ? `${market.txHash.slice(0, 6)}...${market.txHash.slice(-4)}` : 'Contract';
+
+  const handleBetClick = useCallback(async (side: 'yes' | 'no') => {
+    if (!isConnected) {
+      showToast('Please connect your wallet first', 'warning');
+      return;
+    }
+    
+    try {
+      setLoading(side);
+      showToast('Opening MetaMask...', 'info');
+      
+      // MetaMask'ı hemen tetikle
+      const receipt = await buyShares(Number(market.id), side === 'yes', qty);
+      
+      // Success
+      dispatch(addBet({ 
+        id: `${market.id}-${side}-${Date.now()}`, 
+        userId: (window as any).ethereum?.selectedAddress || 'me', 
+        marketId: String(market.id), 
+        amount: qty * 0.5, 
+        side: side, 
+        timestamp: Date.now() 
+      })); 
+      
+      handleBetSuccess(side, receipt.transactionHash);
+    } catch (error: any) { 
+      handleBetError(error.message); 
+    } finally { 
+      setLoading(false); 
+    }
+  }, [isConnected, market.id, qty, dispatch]);
 
   return (
     <Card onClick={handleCardClick}>
@@ -118,9 +260,30 @@ export function MarketCard({ market }: Props) {
 
         <BuyRow>
           <QtyInput type="number" min={1} value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value)))} />
-          <BuyButton disabled={!isConnected || loading !== false || ((window as any).ethereum?.selectedAddress?.toLowerCase() === (market as any).creatorId?.toLowerCase())} onClick={async (e) => { e.stopPropagation(); try { setLoading('yes'); const receipt = await buyShares(Number(market.id), true, qty); dispatch(addBet({ id: `${market.id}-yes-${Date.now()}`, userId: (window as any).ethereum?.selectedAddress || 'me', marketId: String(market.id), amount: qty * 0.5, side: 'yes', timestamp: Date.now() })); } finally { setLoading(false); } }}>Buy YES</BuyButton>
-          <BuyButton disabled={!isConnected || loading !== false || ((window as any).ethereum?.selectedAddress?.toLowerCase() === (market as any).creatorId?.toLowerCase())} onClick={async (e) => { e.stopPropagation(); try { setLoading('no'); const receipt = await buyShares(Number(market.id), false, qty); dispatch(addBet({ id: `${market.id}-no-${Date.now()}`, userId: (window as any).ethereum?.selectedAddress || 'me', marketId: String(market.id), amount: qty * 0.5, side: 'no', timestamp: Date.now() })); } finally { setLoading(false); } }}>Buy NO</BuyButton>
+          <BuyButton 
+            disabled={!isConnected || loading !== false || ((window as any).ethereum?.selectedAddress?.toLowerCase() === (market as any).creatorId?.toLowerCase())} 
+            onClick={async (e) => { 
+              e.stopPropagation(); 
+              await handleBetClick('yes'); 
+            }}
+          >
+            {loading === 'yes' ? 'Processing...' : 'Buy YES'}
+          </BuyButton>
+          <BuyButton 
+            disabled={!isConnected || loading !== false || ((window as any).ethereum?.selectedAddress?.toLowerCase() === (market as any).creatorId?.toLowerCase())} 
+            onClick={async (e) => { 
+              e.stopPropagation(); 
+              await handleBetClick('no'); 
+            }}
+          >
+            {loading === 'no' ? 'Processing...' : 'Buy NO'}
+          </BuyButton>
         </BuyRow>
+        
+        <BetAmountInfo>
+          <BetAmountLabel>Total Bet Amount:</BetAmountLabel>
+          <BetAmountValue>{qty * 0.5} STT</BetAmountValue>
+        </BetAmountInfo>
         <QuickRow>
           {[1,5,10,20].map(v => (
             <QuickBtn key={v} onClick={(e)=>{ e.stopPropagation(); setQty(v); }}>{v}</QuickBtn>
@@ -133,6 +296,17 @@ export function MarketCard({ market }: Props) {
           <ProbValue>{yesProb}%</ProbValue>
         </ProbRow>
       </CardFooter>
+      <BetSuccessModal
+        isOpen={showSuccessModal}
+        onClose={closeSuccessModal}
+        betDetails={betDetails}
+      />
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
     </Card>
   );
 }
@@ -410,7 +584,23 @@ const BuyButton = styled.button`
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  position: relative;
+  overflow: hidden;
+  
+  &:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+  }
+  
+  &:not(:disabled):hover {
+    background: ${({ theme }) => theme.colors.accentGreen || theme.colors.primary};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  &:not(:disabled):active {
+    transform: translateY(0);
+  }
 `;
 
 const QuickRow = styled.div`
@@ -468,6 +658,35 @@ const DisabledButton = styled.button`
     padding: 12px 0;
     font-size: 13px;
   }
+`;
+
+const BetAmountInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: ${({ theme }) => theme.colors.background};
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  @media (max-width: 600px) {
+    padding: 10px 20px;
+    margin-top: 12px;
+  }
+`;
+
+const BetAmountLabel = styled.span`
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const BetAmountValue = styled.span`
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 14px;
+  font-weight: 800;
 `;
 
  

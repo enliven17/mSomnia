@@ -184,13 +184,47 @@ export const solidityClient = new SolidityClient();
 // Buy helper: qty shares at 0.5 STT per share (native token)
 export async function buyShares(marketId: number, isYes: boolean, quantity: number) {
   if (typeof window === 'undefined' || !(window as any).ethereum) throw new Error('Wallet not available');
-  const provider = new ethers.BrowserProvider((window as any).ethereum);
-  const signer = await provider.getSigner();
-  const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-  const pricePerShare = ethers.parseEther('0.5');
-  const total = pricePerShare * BigInt(Math.max(0, Math.floor(quantity)));
-  const tx = await contract.placeBet(marketId, isYes, { value: total });
-  return await tx.wait();
+  
+  try {
+    // MetaMask'ı direkt kullan, provider üzerinden değil
+    const provider = new ethers.BrowserProvider((window as any).ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+    
+    const pricePerShare = ethers.parseEther('0.5');
+    const total = pricePerShare * BigInt(Math.max(0, Math.floor(quantity)));
+    
+    // Somnia testnet için yüksek gas limit
+    const gasLimit = 2000000n; // 2M gas (çok yüksek)
+    const gasPrice = ethers.parseUnits('200000000000', 'wei'); // 200 Gwei (yüksek)
+    
+    console.log('🔧 Transaction params:', {
+      marketId,
+      isYes,
+      value: total.toString(),
+      gasLimit: gasLimit.toString(),
+      gasPrice: gasPrice.toString()
+    });
+    
+    // Transaction'ı gönder
+    const tx = await contract.placeBet(marketId, isYes, { 
+      value: total,
+      gasLimit: gasLimit,
+      gasPrice: gasPrice
+    });
+    
+    console.log('✅ Transaction sent:', tx.hash);
+    return await tx.wait();
+  } catch (error) {
+    console.error('❌ Transaction failed:', error);
+    
+    // Gas limit hatası için özel mesaj
+    if ((error as any).message && (error as any).message.includes('gas')) {
+      throw new Error('Gas limit exceeded - please try again with higher gas');
+    }
+    
+    throw error;
+  }
 }
 
 export default solidityClient; 
